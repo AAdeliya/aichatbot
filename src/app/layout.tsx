@@ -8,7 +8,7 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
-//import "globals.css";
+import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
@@ -25,16 +25,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={jakarta.className}>
-          {/* <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            disableTransitionOnChange
-          >
-            {children}
-            <Toaster />
-          </ThemeProvider> */}
-        </body>
+        <body className={jakarta.className}>{children}</body>
       </html>
     </ClerkProvider>
   );
