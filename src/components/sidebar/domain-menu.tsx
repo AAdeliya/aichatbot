@@ -74,7 +74,9 @@ const DomainMenu = ({ domains, min }: Props) => {
               <Input
                 type="file"
                 accept="image/*"
-                onChange={(e) => setIcon(e.target.files?.[0] || null)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setIcon(e.target.files?.[0] || null)
+                }
                 disabled={loading}
               />
 

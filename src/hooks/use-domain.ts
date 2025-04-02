@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { FieldValues, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AddDomainSchema } from "../schemas/settings.schema";
+import { AddDomainSchema } from "@/schemas/settings.schema";
 import { UploadClient } from "@uploadcare/upload-client";
 import { onIntegrateDomain } from "@/actions/settings";
-import { useToast } from "../hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const upload = new UploadClient({
   publicKey: process.env.NEXT_PUBLIC_UPLOAD_CARE_PUBLIC_KEY as string,
@@ -40,6 +40,7 @@ export const useDomain = () => {
       }
 
       // ✅ Call server action
+      
       const response = await onIntegrateDomain({
         ...values,
         icon: iconUrl,

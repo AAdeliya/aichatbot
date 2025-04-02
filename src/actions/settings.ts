@@ -22,7 +22,13 @@ export const onIntegrateDomain = async (domain: string, icon: string) => {
     const userData = await prisma.user.findUnique({
       where: { clerkId: userId },
       include: {
-        subscription: true,
+        subscription: {
+          select: {
+            id: true,
+            name: true,
+            maxDomains: true,
+          },
+        },
         domains: true,
       },
     });

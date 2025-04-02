@@ -38,7 +38,7 @@ model User {
   domains   Domain[] // One user can have multiple domains
 }
 
-model Billings {
+model Subscription {
   id      String @id @default(cuid())
   plan    Plans
   credits Int
