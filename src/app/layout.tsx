@@ -1,32 +1,26 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import ClientLayout from "@/components/ClientLayout";
 
-const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "MailGenie",
-  description: "AI-powered sales assistant.",
+  description: "Email marketing and conversation platform",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body className={jakarta.className}>{children}</body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <body className={inter.className}>
+        <ClientLayout>{children}</ClientLayout>
+      </body>
+    </html>
   );
 }

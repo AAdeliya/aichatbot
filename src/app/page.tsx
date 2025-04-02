@@ -1,3 +1,4 @@
+//redirect to /dashboard
 "use client";
 
 import { useRouter } from "next/navigation";

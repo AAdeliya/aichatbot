@@ -1,127 +1,176 @@
 // src/components/ui/Sidebar.tsx
-import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  MessageSquare,
+  Settings,
+  Calendar,
+  Mail,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Cable,
+} from "lucide-react";
+
+type SidebarItem = {
+  title: string;
+  href: string;
+  icon: React.ReactNode;
+  variant: "default" | "ghost";
+};
+
+const defaultItems: SidebarItem[] = [
+  {
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: <LayoutDashboard className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
+    variant: "default",
+  },
+  {
+    title: "Conversations",
+    href: "/conversations",
+    icon: <MessageSquare className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
+    variant: "ghost",
+  },
+  {
+    title: "Integrations",
+    href: "/integrations",
+    icon: <Cable className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
+    variant: "ghost",
+  },
+  {
+    title: "Appointments",
+    href: "/appointments",
+    icon: <Calendar className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
+    variant: "ghost",
+  },
+  {
+    title: "Email Marketing",
+    href: "/email-marketing",
+    icon: <Mail className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
+    variant: "ghost",
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    icon: <Settings className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
+    variant: "ghost",
+  },
+];
 
 interface SidebarProps {
-  children: React.ReactNode;
-  className?: string;
+  domains?: {
+    id: string;
+    name: string;
+    icon: string | null;
+  }[];
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
-  children,
-  className = "",
-}) => {
-  const [expanded, setExpanded] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-
-  // Check if we're on mobile
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-      // Auto-collapse on mobile
-      if (window.innerWidth < 768) {
-        setExpanded(false);
-      }
-    };
-
-    // Check on initial render
-    checkIfMobile();
-
-    // Set up listener for window resize
-    window.addEventListener("resize", checkIfMobile);
-
-    // Clean up event listener
-    return () => window.removeEventListener("resize", checkIfMobile);
-  }, []);
-
-  const toggleSidebar = () => {
-    if (isMobile) {
-      setIsVisible(!isVisible);
-    } else {
-      setExpanded(!expanded);
-    }
-  };
+export function Sidebar({ domains }: SidebarProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname();
 
   return (
-    <>
-      {/* Mobile overlay when sidebar is open */}
-      {isMobile && isVisible && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20"
-          onClick={() => setIsVisible(false)}
-        />
+    <div
+      className={cn(
+        "relative min-h-screen border-r px-4 pb-10 pt-8 transition-all duration-300",
+        "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800",
+        isCollapsed ? "w-16" : "w-64"
       )}
+    >
+      <div className="absolute right-[-20px] top-7">
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="rounded-full border bg-white dark:bg-gray-800 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-700"
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+          ) : (
+            <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+          )}
+        </button>
+      </div>
 
-      <aside
-        className={`
-          fixed left-0 top-0 h-full z-30
-          transition-all duration-300 ease-in-out
-          flex flex-col 
-          bg-white dark:bg-gray-900
-          border-r border-gray-200 dark:border-gray-800
-          ${expanded ? "w-64" : "w-16"} 
-          ${
-            isMobile
-              ? isVisible
-                ? "translate-x-0"
-                : "-translate-x-full"
-              : "translate-x-0"
-          }
-          ${className}
-        `}
-      >
-        <div className="flex items-center justify-end p-4 border-b border-gray-200 dark:border-gray-800">
-          <button
-            onClick={toggleSidebar}
-            className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
-            aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
-          >
-            {isMobile ? (
-              <ChevronLeft size={20} />
-            ) : expanded ? (
-              <ChevronLeft size={20} />
-            ) : (
-              <ChevronRight size={20} />
+      {/* Logo or app name display */}
+      <div className="mb-8">
+        {!isCollapsed ? (
+          <Link href="/dashboard" className="flex items-center mb-2">
+            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 dark:border-gray-700 mr-2"></div>
+            <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
+              MailGenie
+            </h1>
+          </Link>
+        ) : (
+          <div className="flex justify-center mb-2">
+            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 dark:border-gray-700"></div>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        <div className="py-2">
+          <h2
+            className={cn(
+              "text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider",
+              isCollapsed && "hidden"
             )}
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-2">
-            {/* Pass down expanded state to children */}
-            {React.Children.map(children, (child) => {
-              if (React.isValidElement(child)) {
-                return React.cloneElement(child as React.ReactElement<any>, {
-                  expanded,
-                });
-              }
-              return child;
-            })}
+          >
+            MENU
+          </h2>
+          <div className="space-y-1 py-4">
+            {defaultItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center rounded-lg px-3 py-2 text-gray-900 dark:text-gray-300 transition-all",
+                  "hover:bg-gray-100 dark:hover:bg-gray-800",
+                  pathname === item.href &&
+                    "bg-gray-100 dark:bg-gray-800 font-medium text-gray-900 dark:text-white",
+                  isCollapsed && "justify-center"
+                )}
+              >
+                <div
+                  className={cn(
+                    "flex items-center justify-center w-5 h-5",
+                    pathname === item.href
+                      ? "text-gray-900 dark:text-white"
+                      : "text-gray-500 dark:text-gray-400"
+                  )}
+                >
+                  {item.icon}
+                </div>
+                <span className={cn("ml-3 text-sm", isCollapsed && "hidden")}>
+                  {item.title}
+                </span>
+              </Link>
+            ))}
           </div>
         </div>
-      </aside>
+      </div>
 
-      {/* Mobile toggle button - only visible when sidebar is hidden */}
-      {isMobile && !isVisible && (
-        <button
-          className="fixed left-4 top-4 z-20 p-2 rounded-md bg-white dark:bg-gray-900 shadow-md"
-          onClick={() => setIsVisible(true)}
-          aria-label="Open sidebar"
+      <div className="absolute bottom-4 left-4">
+        <Link
+          href="/sign-out"
+          className={cn(
+            "flex items-center rounded-lg px-3 py-2 text-gray-900 dark:text-gray-300",
+            "transition-all hover:bg-gray-100 dark:hover:bg-gray-800",
+            isCollapsed && "justify-center"
+          )}
         >
-          <ChevronRight size={20} />
-        </button>
-      )}
-
-      {/* Main content wrapper with padding based on sidebar state */}
-      <main
-        className={`
-          transition-all duration-300 ease-in-out 
-          ${!isMobile ? (expanded ? "ml-64" : "ml-16") : "ml-0"}
-        `}
-      >
-        {/* Your main content goes here */}
-      </main>
-    </>
+          <div className="flex items-center justify-center w-5 h-5 text-gray-500 dark:text-gray-400">
+            <LogOut className="h-5 w-5 min-w-[20px] min-h-[20px]" />
+          </div>
+          <span className={cn("ml-3 text-sm", isCollapsed && "hidden")}>
+            Sign Out
+          </span>
+        </Link>
+      </div>
+    </div>
   );
-};
+}

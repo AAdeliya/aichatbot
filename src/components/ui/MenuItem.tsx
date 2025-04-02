@@ -1,4 +1,5 @@
 // src/components/ui/MenuItem.tsx
+//reusable item for nav items
 import React from "react";
 import { LucideIcon } from "lucide-react";
 

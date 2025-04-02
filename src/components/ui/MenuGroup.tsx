@@ -1,4 +1,6 @@
 // src/components/ui/MenuGroup.tsx
+//group menu and options
+
 import React, { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
