@@ -1,4 +1,3 @@
-// src/components/ui/Sidebar.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,92 +15,74 @@ import {
   ChevronRight,
   Cable,
 } from "lucide-react";
-import DomainMenu from "@/components/sidebar/domain-menu";
-import { useUser } from "@clerk/nextjs";
+import { getUserDomains } from "@/actions/settings";
+import DomainMenu from "../sidebar/domain-menu";
 
 type SidebarItem = {
   title: string;
   href: string;
   icon: React.ReactNode;
-  variant: "default" | "ghost";
+};
+
+type Domain = {
+  id: string;
+  name: string;
+  icon: string | null;
 };
 
 const defaultItems: SidebarItem[] = [
   {
     title: "Dashboard",
     href: "/dashboard",
-    icon: <LayoutDashboard className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
-    variant: "default",
+    icon: <LayoutDashboard className="h-5 w-5" />,
   },
   {
     title: "Conversations",
     href: "/dashboard/conversations",
-    icon: <MessageSquare className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
-    variant: "ghost",
+    icon: <MessageSquare className="h-5 w-5" />,
   },
   {
     title: "Integrations",
     href: "/dashboard/integrations",
-    icon: <Cable className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
-    variant: "ghost",
+    icon: <Cable className="h-5 w-5" />,
   },
   {
     title: "Appointments",
     href: "/dashboard/appointments",
-    icon: <Calendar className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
-    variant: "ghost",
+    icon: <Calendar className="h-5 w-5" />,
   },
   {
     title: "Email Marketing",
     href: "/dashboard/emailMarketing",
-    icon: <Mail className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
-    variant: "ghost",
+    icon: <Mail className="h-5 w-5" />,
   },
   {
     title: "Settings",
     href: "/dashboard/settings",
-    icon: <Settings className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
-    variant: "ghost",
+    icon: <Settings className="h-5 w-5" />,
   },
 ];
 
-interface SidebarProps {
-  domains?: {
-    id: string;
-    name: string;
-    icon: string | null;
-  }[];
-}
-
-export function Sidebar({ domains }: SidebarProps) {
+export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [domains, setDomains] = useState<Domain[] | null>(null);
   const pathname = usePathname();
-  const { isSignedIn } = useUser();
-  const [userDomains, setUserDomains] = useState<any[]>([]);
 
   // Fetch domains on component mount
   useEffect(() => {
     const fetchDomains = async () => {
       try {
-        // This is a placeholder - you would replace with actual API call
-        // For now we'll use dummy data
-        setUserDomains([
-          { id: "1", name: "example.com", icon: null },
-          { id: "2", name: "mysite.com", icon: null },
-        ]);
+        const result = await getUserDomains();
+        if (result.status === 200) {
+          setDomains(result.domains);
+        }
       } catch (error) {
-        console.error("Failed to fetch domains:", error);
+        console.error("Error fetching domains:", error);
       }
     };
 
-    if (isSignedIn) {
-      fetchDomains();
-    }
-  }, [isSignedIn]);
-
-  if (!isSignedIn) {
-    return null;
-  }
+    fetchDomains();
+  }, []);
 
   return (
     <div
@@ -128,78 +109,82 @@ export function Sidebar({ domains }: SidebarProps) {
       <div className="mb-8">
         {!isCollapsed ? (
           <Link href="/dashboard" className="flex items-center mb-2">
-            <div className="w-8 h-8 rounded-full bg-orange-400 mr-2"></div>
+            <div className="w-8 h-8 rounded-full bg-amber-400 mr-2 flex items-center justify-center">
+              <span className="text-white font-semibold">M</span>
+            </div>
             <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
               MailGenie
             </h1>
           </Link>
         ) : (
           <div className="flex justify-center mb-2">
-            <div className="w-8 h-8 rounded-full bg-orange-400"></div>
+            <div className="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center">
+              <span className="text-white font-semibold">M</span>
+            </div>
           </div>
         )}
       </div>
 
-      <div className="space-y-4">
+      {/* Main navigation items */}
+      <div className="space-y-6">
         <div className="py-2">
           <h2
             className={cn(
-              "text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider",
-              isCollapsed && "hidden"
+              "text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-3",
+              isCollapsed && "sr-only"
             )}
           >
-            MENU
+            Menu
           </h2>
-          <div className="space-y-1 py-4">
+          <div className="space-y-1">
             {defaultItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center rounded-lg px-3 py-2 text-gray-900 dark:text-gray-300 transition-all",
+                  "flex items-center rounded-md px-3 py-2 text-gray-900 dark:text-gray-300 transition-all",
                   "hover:bg-gray-100 dark:hover:bg-gray-800",
                   pathname === item.href &&
-                    "bg-gray-100 dark:bg-gray-800 font-medium text-gray-900 dark:text-white",
+                    "bg-gray-100 dark:bg-gray-800 font-medium text-primary dark:text-primary",
                   isCollapsed && "justify-center"
                 )}
               >
                 <div
                   className={cn(
-                    "flex items-center justify-center w-5 h-5",
+                    "flex items-center justify-center",
                     pathname === item.href
-                      ? "text-gray-900 dark:text-white"
+                      ? "text-primary"
                       : "text-gray-500 dark:text-gray-400"
                   )}
                 >
                   {item.icon}
                 </div>
-                <span className={cn("ml-3 text-sm", isCollapsed && "hidden")}>
-                  {item.title}
-                </span>
+                {!isCollapsed && (
+                  <span className="ml-3 text-sm">{item.title}</span>
+                )}
               </Link>
             ))}
           </div>
         </div>
+
+        {/* Domain section */}
+        <DomainMenu domains={domains} collapsed={isCollapsed} />
       </div>
 
-      {/* Domain Menu */}
-      <DomainMenu domains={userDomains} min={isCollapsed} />
-
-      <div className="absolute bottom-4 left-4">
+      {/* Sign out button */}
+      <div className="absolute bottom-4 left-0 right-0 px-4">
         <Link
-          href="/auth/sign-in"
+          href="/api/auth/sign-out"
           className={cn(
-            "flex items-center rounded-lg px-3 py-2 text-gray-900 dark:text-gray-300",
+            "flex items-center rounded-md px-3 py-2 text-gray-900 dark:text-gray-300",
             "transition-all hover:bg-gray-100 dark:hover:bg-gray-800",
             isCollapsed && "justify-center"
           )}
         >
-          <div className="flex items-center justify-center w-5 h-5 text-gray-500 dark:text-gray-400">
-            <LogOut className="h-5 w-5 min-w-[20px] min-h-[20px]" />
+          <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
+            <LogOut className="h-5 w-5" />
           </div>
-          <span className={cn("ml-3 text-sm", isCollapsed && "hidden")}>
-            Sign Out
-          </span>
+          {!isCollapsed && <span className="ml-3 text-sm">Sign Out</span>}
         </Link>
       </div>
     </div>

@@ -1,16 +1,15 @@
-// src/app/layout.tsx
-// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import ClientLayout from "@/components/ClientLayout";
-import { ClerkProvider } from "@clerk/nextjs"; // 👈 Add this
+import { ClerkProvider } from "@clerk/nextjs";
+import ClientLayout from "@/components/providers/client-layout";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "MailGenie",
-  description: "Email marketing and conversation platform",
+  description: "AI-powered email marketing and conversation platform",
 };
 
 export default function RootLayout({
@@ -19,12 +18,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
-      {" "}
-      {/* 👈 Wrap everything inside */}
+    <ClerkProvider
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+    >
       <html lang="en">
         <body className={inter.className}>
           <ClientLayout>{children}</ClientLayout>
+          <Toaster position="top-right" />
         </body>
       </html>
     </ClerkProvider>

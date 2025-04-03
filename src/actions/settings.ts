@@ -1,47 +1,58 @@
 "use server";
 
-import { getAuth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs";
 import { prisma } from "@/lib/db";
+import { Plans } from "@prisma/client";
+import { z } from "zod";
+import { AddDomainSchema } from "@/schema/settings.schema";
+import { pusherServer } from "@/lib/utils";
 
-type SubscriptionPlan = {
-  id: string;
-  name: string;
-  maxDomains: number;
+const MAX_DOMAINS = {
+  [Plans.FREE]: 1,
+  [Plans.BASIC]: 3,
+  [Plans.PREMIUM]: 10
 };
 
-export const onIntegrateDomain = async (domain: string, icon: string) => {
-  // Get the authenticated user's ID
-  const { userId } = getAuth();
-  
-  if (!userId) {
-    return { status: 401, message: "Unauthorized" };
-  }
-
+export const onIntegrateDomain = async (formData: string, icon: string) => {
   try {
-    // Fetch the user's subscription and count their current domains
-    const userData = await prisma.user.findUnique({
+    // Parse and validate the input
+    const parsedData = JSON.parse(formData);
+    const validatedData = AddDomainSchema.safeParse(parsedData);
+    
+    if (!validatedData.success) {
+      return { 
+        status: 400, 
+        message: "Invalid domain data" 
+      };
+    }
+    
+    const { name, url } = validatedData.data;
+    
+    // Get the authenticated user's ID
+    const { userId } = auth();
+    
+    if (!userId) {
+      return { status: 401, message: "Unauthorized" };
+    }
+
+    // Find the user in our database (using their Clerk ID)
+    const user = await prisma.user.findFirst({
       where: { clerkId: userId },
       include: {
-        subscription: {
-          select: {
-            id: true,
-            name: true,
-            maxDomains: true,
-          },
-        },
+        //subscription: true,
         domains: true,
       },
     });
 
-    if (!userData) {
+    if (!user) {
       return { status: 404, message: "User not found" };
     }
 
     // Check if the domain already exists
     const existingDomain = await prisma.domain.findFirst({
       where: {
-        name: domain,
-        userId: userData.id,
+        name,
+        userId: user.id,
       },
     });
 
@@ -49,67 +60,74 @@ export const onIntegrateDomain = async (domain: string, icon: string) => {
       return { status: 409, message: "Domain already integrated" };
     }
 
-    // Check the subscription plan and enforce limits
-    const currentPlan = userData.subscription as SubscriptionPlan | null;
-    const domainsCount = userData.domains.length;
+    // Check subscription limits
+    // const plan = user.subscription?.plan || Plans.FREE;
+    // const currentDomainCount = user.domains.length;
+    // const maxDomainsAllowed = MAX_DOMAINS[plan];
 
-    if (!currentPlan) {
-      return { status: 402, message: "No active subscription found" };
-    }
+    // if (currentDomainCount >= maxDomainsAllowed) {
+    //   return {
+    //     status: 403,
+    //     message: `Your ${plan} plan allows a maximum of ${maxDomainsAllowed} domains. Please upgrade to add more.`,
+    //   };
+    // }
 
-    if (domainsCount >= currentPlan.maxDomains) {
-      return {
-        status: 403,
-        message: `Your ${currentPlan.name} plan allows a maximum of ${currentPlan.maxDomains} domains`,
-      };
-    }
-
-    // Create a new domain entry and link it to the user
-    await prisma.domain.create({
+    // Create the domain
+    const newDomain = await prisma.domain.create({
       data: {
-        name: domain,
-        icon: icon,
-        userId: userData.id,
+        name,
+        icon,
+        userId: user.id,
       },
     });
+
+    // Notify through Pusher that a domain was added
+    await pusherServer.trigger(
+      `user-${user.id}`,
+      'domain-added',
+      { domain: newDomain }
+    );
 
     return { 
       status: 200, 
       message: "Domain successfully added",
-      remainingDomains: currentPlan.maxDomains - (domainsCount + 1)
+      domain: newDomain,
+      remainingDomains: maxDomainsAllowed - (currentDomainCount + 1)
     };
   } catch (error) {
-    console.error(error);
+    console.error("Error integrating domain:", error);
     return { status: 500, message: "Internal Server Error" };
   }
 };
 
-// Additional helper function to get user domains
+// Get all domains for the current user
 export const getUserDomains = async () => {
-  const { userId } = auth();
-  
-  if (!userId) {
-    return { status: 401, message: "Unauthorized", domains: [] };
-  }
-
   try {
-    const userData = await prisma.user.findUnique({
+    const { userId } = auth();
+    
+    if (!userId) {
+      return { status: 401, message: "Unauthorized", domains: [] };
+    }
+
+    const user = await prisma.user.findFirst({
       where: { clerkId: userId },
-      include: {
-        domains: true,
-      },
     });
 
-    if (!userData) {
+    if (!user) {
       return { status: 404, message: "User not found", domains: [] };
     }
 
+    const domains = await prisma.domain.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+    });
+
     return { 
       status: 200,
-      domains: userData.domains
+      domains
     };
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching domains:", error);
     return { status: 500, message: "Internal Server Error", domains: [] };
   }
 };
