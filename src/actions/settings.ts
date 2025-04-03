@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs";
+import { getAuth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 import { Plans } from "@prisma/client";
 import { z } from "zod";
@@ -29,7 +29,7 @@ export const onIntegrateDomain = async (formData: string, icon: string) => {
     const { name, url } = validatedData.data;
     
     // Get the authenticated user's ID
-    const { userId } = auth();
+    const { userId } = getAuth();
     
     if (!userId) {
       return { status: 401, message: "Unauthorized" };
@@ -39,7 +39,7 @@ export const onIntegrateDomain = async (formData: string, icon: string) => {
     const user = await prisma.user.findFirst({
       where: { clerkId: userId },
       include: {
-        //subscription: true,
+        subscription: true,
         domains: true,
       },
     });
@@ -61,16 +61,16 @@ export const onIntegrateDomain = async (formData: string, icon: string) => {
     }
 
     // Check subscription limits
-    // const plan = user.subscription?.plan || Plans.FREE;
-    // const currentDomainCount = user.domains.length;
-    // const maxDomainsAllowed = MAX_DOMAINS[plan];
+    const plan = user.subscription?.plan || Plans.FREE;
+    const currentDomainCount = user.domains.length;
+    const maxDomainsAllowed = MAX_DOMAINS[plan];
 
-    // if (currentDomainCount >= maxDomainsAllowed) {
-    //   return {
-    //     status: 403,
-    //     message: `Your ${plan} plan allows a maximum of ${maxDomainsAllowed} domains. Please upgrade to add more.`,
-    //   };
-    // }
+    if (currentDomainCount >= maxDomainsAllowed) {
+      return {
+        status: 403,
+        message: `Your ${plan} plan allows a maximum of ${maxDomainsAllowed} domains. Please upgrade to add more.`,
+      };
+    }
 
     // Create the domain
     const newDomain = await prisma.domain.create({
@@ -92,7 +92,7 @@ export const onIntegrateDomain = async (formData: string, icon: string) => {
       status: 200, 
       message: "Domain successfully added",
       domain: newDomain,
-      //remainingDomains: maxDomainsAllowed - (currentDomainCount + 1)
+      remainingDomains: maxDomainsAllowed - (currentDomainCount + 1)
     };
   } catch (error) {
     console.error("Error integrating domain:", error);
@@ -103,7 +103,7 @@ export const onIntegrateDomain = async (formData: string, icon: string) => {
 // Get all domains for the current user
 export const getUserDomains = async () => {
   try {
-    const { userId } = auth();
+    const { userId } = getAuth();
     
     if (!userId) {
       return { status: 401, message: "Unauthorized", domains: [] };
@@ -119,7 +119,7 @@ export const getUserDomains = async () => {
 
     const domains = await prisma.domain.findMany({
       where: { userId: user.id },
-      //orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "desc" },
     });
 
     return { 

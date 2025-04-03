@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs";
+import { getAuth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { Plans } from "@prisma/client";
@@ -12,7 +12,7 @@ const SubscriptionUpdateSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     // Get the authenticated user
-    const { userId } = auth();
+    const { userId } = getAuth();
     
     if (!userId) {
       return NextResponse.json(

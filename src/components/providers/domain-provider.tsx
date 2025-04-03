@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 import { getUserDomains } from "@/actions/settings";
 import { pusherClient } from "@/lib/utils";
 
@@ -18,15 +19,10 @@ type DomainContextType = {
 
 const DomainContext = createContext<DomainContextType | undefined>(undefined);
 
-export const DomainProvider = ({
-  children,
-  userId,
-}: {
-  children: React.ReactNode;
-  userId: string | null;
-}) => {
+export const DomainProvider = ({ children }: { children: React.ReactNode }) => {
   const [domains, setDomains] = useState<Domain[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useUser();
 
   const fetchDomains = async () => {
     try {
@@ -44,14 +40,16 @@ export const DomainProvider = ({
 
   // Initial fetch
   useEffect(() => {
-    fetchDomains();
-  }, []);
+    if (user) {
+      fetchDomains();
+    }
+  }, [user]);
 
   // Set up real-time updates with Pusher
   useEffect(() => {
-    if (!userId) return;
+    if (!user?.id) return;
 
-    const channel = pusherClient.subscribe(`user-${userId}`);
+    const channel = pusherClient.subscribe(`user-${user.id}`);
 
     channel.bind("domain-added", (data: { domain: Domain }) => {
       setDomains((prevDomains) =>
@@ -61,9 +59,9 @@ export const DomainProvider = ({
 
     return () => {
       channel.unbind_all();
-      pusherClient.unsubscribe(`user-${userId}`);
+      pusherClient.unsubscribe(`user-${user.id}`);
     };
-  }, [userId]);
+  }, [user?.id]);
 
   return (
     <DomainContext.Provider

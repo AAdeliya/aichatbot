@@ -33,9 +33,9 @@ model User {
   updateAt  DateTime @updatedAt
   stripeId  String? // Nullable in case Stripe isn't used
 
-  billing   Billings?
-  campaigns Campaign[]
-  domains   Domain[] // One user can have multiple domains
+  subscription Subscription?
+  campaigns    Campaign[]
+  domains      Domain[] // One user can have multiple domains
 }
 
 model Subscription {

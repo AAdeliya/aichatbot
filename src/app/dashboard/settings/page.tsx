@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { auth, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -11,9 +11,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SubscriptionCards } from "@/components/subscription/subscription-cards";
-import { prisma } from "@/lib/db";
-import { Plans } from "@prisma/client";
 import { Loader2 } from "lucide-react";
+import { Plans } from "@prisma/client";
 
 export default function SettingsPage() {
   const { user, isLoaded } = useUser();
