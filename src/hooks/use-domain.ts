@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { FieldValues, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AddDomainSchema } from "@/schemas/settings.schema";
+import { AddDomainSchema } from "@/schema/settings.schema";
 import { UploadClient } from "@uploadcare/upload-client";
 import { onIntegrateDomain } from "@/actions/settings";
 import { useToast } from "@/hooks/use-toast";
@@ -12,7 +12,7 @@ const upload = new UploadClient({
 });
 
 export const useDomain = () => {
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<FieldValues>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<{ name: string; url: string }>({
     resolver: zodResolver(AddDomainSchema),
   });
 
@@ -41,11 +41,14 @@ export const useDomain = () => {
 
       // ✅ Call server action
       
-      const response = await onIntegrateDomain({
-        ...values,
-        icon: iconUrl,
-        domain: isDomain,
-      });
+      const response = await onIntegrateDomain(
+        JSON.stringify({
+          ...values,
+          icon: iconUrl,
+          domain: isDomain,
+        }),
+        iconUrl || "" // Ensure iconUrl is a string
+      );
 
       toast({
         title: response.status === 200 ? "Success" : "Error",

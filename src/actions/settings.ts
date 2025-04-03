@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs";
+import { getAuth } from "@clerk/nextjs";
 import { prisma } from "@/lib/db";
 
 type SubscriptionPlan = {
@@ -11,7 +11,7 @@ type SubscriptionPlan = {
 
 export const onIntegrateDomain = async (domain: string, icon: string) => {
   // Get the authenticated user's ID
-  const { userId } = auth();
+  const { userId } = getAuth();
   
   if (!userId) {
     return { status: 401, message: "Unauthorized" };
