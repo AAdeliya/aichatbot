@@ -92,7 +92,7 @@ export const onIntegrateDomain = async (formData: string, icon: string) => {
       status: 200, 
       message: "Domain successfully added",
       domain: newDomain,
-      remainingDomains: maxDomainsAllowed - (currentDomainCount + 1)
+      //remainingDomains: maxDomainsAllowed - (currentDomainCount + 1)
     };
   } catch (error) {
     console.error("Error integrating domain:", error);
@@ -119,7 +119,7 @@ export const getUserDomains = async () => {
 
     const domains = await prisma.domain.findMany({
       where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
+      //orderBy: { createdAt: "desc" },
     });
 
     return { 

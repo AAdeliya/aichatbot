@@ -1,8 +1,8 @@
-// src/app/api/subscription/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getAuth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { Plans } from "@prisma/client";
 
 // Schema for subscription update
 const SubscriptionUpdateSchema = z.object({
@@ -12,7 +12,7 @@ const SubscriptionUpdateSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     // Get the authenticated user
-    const { userId } = getAuth();
+    const { userId } = auth();
     
     if (!userId) {
       return NextResponse.json(
@@ -37,10 +37,10 @@ export async function POST(req: NextRequest) {
     const { plan } = validation.data;
     
     // Find the user in our database
-    const userData = await prisma.user.findUnique({
+    const userData = await prisma.user.findFirst({
       where: { clerkId: userId },
       include: {
-        billing: true,
+        subscription: true,
       },
     });
     
@@ -52,20 +52,49 @@ export async function POST(req: NextRequest) {
     }
     
     // Determine credits based on plan
-    const credits = plan === "PREMIUM" ? 10000 : plan === "BASIC" ? 5000 : 1000;
+    const creditsMap = {
+      [Plans.PREMIUM]: 10000,
+      [Plans.BASIC]: 5000,
+      [Plans.FREE]: 1000,
+    };
+    
+    // Cast the string plan to the enum type
+    const planEnum = plan as Plans;
+    const credits = creditsMap[planEnum];
     
     // Update or create subscription
-    if (userData.billing) {
+    if (userData.subscription) {
       await prisma.subscription.update({
-        where: { id: userData.billing.id },
+        where: { id: userData.subscription.id },
         data: {
-          plan,
+          plan: planEnum,
           credits,
         },
       });
     } else {
       await prisma.subscription.create({
         data: {
-          plan,
+          plan: planEnum,
           credits,
           userId: userData.id,
+        },
+      });
+    }
+    
+    return NextResponse.json(
+      { 
+        message: "Subscription updated successfully",
+        plan,
+        credits
+      },
+      { status: 200 }
+    );
+    
+  } catch (error) {
+    console.error("Error updating subscription:", error);
+    return NextResponse.json(
+      { message: "Error updating subscription", error: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
