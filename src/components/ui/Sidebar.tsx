@@ -1,7 +1,7 @@
 // src/components/ui/Sidebar.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,8 @@ import {
   ChevronRight,
   Cable,
 } from "lucide-react";
+import DomainMenu from "@/components/sidebar/domain-menu";
+import { useUser } from "@clerk/nextjs";
 
 type SidebarItem = {
   title: string;
@@ -33,31 +35,31 @@ const defaultItems: SidebarItem[] = [
   },
   {
     title: "Conversations",
-    href: "/conversations",
+    href: "/dashboard/conversations",
     icon: <MessageSquare className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
     variant: "ghost",
   },
   {
     title: "Integrations",
-    href: "/integrations",
+    href: "/dashboard/integrations",
     icon: <Cable className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
     variant: "ghost",
   },
   {
     title: "Appointments",
-    href: "/appointments",
+    href: "/dashboard/appointments",
     icon: <Calendar className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
     variant: "ghost",
   },
   {
     title: "Email Marketing",
-    href: "/email-marketing",
+    href: "/dashboard/emailMarketing",
     icon: <Mail className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
     variant: "ghost",
   },
   {
     title: "Settings",
-    href: "/settings",
+    href: "/dashboard/settings",
     icon: <Settings className="h-5 w-5 min-w-[20px] min-h-[20px]" />,
     variant: "ghost",
   },
@@ -74,6 +76,32 @@ interface SidebarProps {
 export function Sidebar({ domains }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
+  const { isSignedIn } = useUser();
+  const [userDomains, setUserDomains] = useState<any[]>([]);
+
+  // Fetch domains on component mount
+  useEffect(() => {
+    const fetchDomains = async () => {
+      try {
+        // This is a placeholder - you would replace with actual API call
+        // For now we'll use dummy data
+        setUserDomains([
+          { id: "1", name: "example.com", icon: null },
+          { id: "2", name: "mysite.com", icon: null },
+        ]);
+      } catch (error) {
+        console.error("Failed to fetch domains:", error);
+      }
+    };
+
+    if (isSignedIn) {
+      fetchDomains();
+    }
+  }, [isSignedIn]);
+
+  if (!isSignedIn) {
+    return null;
+  }
 
   return (
     <div
@@ -100,14 +128,14 @@ export function Sidebar({ domains }: SidebarProps) {
       <div className="mb-8">
         {!isCollapsed ? (
           <Link href="/dashboard" className="flex items-center mb-2">
-            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 dark:border-gray-700 mr-2"></div>
+            <div className="w-8 h-8 rounded-full bg-orange-400 mr-2"></div>
             <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
               MailGenie
             </h1>
           </Link>
         ) : (
           <div className="flex justify-center mb-2">
-            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 dark:border-gray-700"></div>
+            <div className="w-8 h-8 rounded-full bg-orange-400"></div>
           </div>
         )}
       </div>
@@ -154,9 +182,12 @@ export function Sidebar({ domains }: SidebarProps) {
         </div>
       </div>
 
+      {/* Domain Menu */}
+      <DomainMenu domains={userDomains} min={isCollapsed} />
+
       <div className="absolute bottom-4 left-4">
         <Link
-          href="/sign-out"
+          href="/auth/sign-in"
           className={cn(
             "flex items-center rounded-lg px-3 py-2 text-gray-900 dark:text-gray-300",
             "transition-all hover:bg-gray-100 dark:hover:bg-gray-800",
