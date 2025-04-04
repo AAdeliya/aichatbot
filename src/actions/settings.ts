@@ -1,10 +1,10 @@
+// src/actions/settings.ts
 "use server";
 
 import { getAuth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 import { Plans } from "@prisma/client";
-import { z } from "zod";
-import { AddDomainSchema } from "@/schema/settings.schema";
+//import { DomainSchema } from "../schema/domains.schema";
 import { pusherServer } from "@/lib/utils";
 
 const MAX_DOMAINS = {
@@ -13,21 +13,8 @@ const MAX_DOMAINS = {
   [Plans.PREMIUM]: 10
 };
 
-export const onIntegrateDomain = async (formData: string, icon: string) => {
+export const onIntegrateDomain = async (data: any) => {
   try {
-    // Parse and validate the input
-    const parsedData = JSON.parse(formData);
-    const validatedData = AddDomainSchema.safeParse(parsedData);
-    
-    if (!validatedData.success) {
-      return { 
-        status: 400, 
-        message: "Invalid domain data" 
-      };
-    }
-    
-    const { name, url } = validatedData.data;
-    
     // Get the authenticated user's ID
     const { userId } = getAuth();
     
@@ -35,6 +22,18 @@ export const onIntegrateDomain = async (formData: string, icon: string) => {
       return { status: 401, message: "Unauthorized" };
     }
 
+    // Validate the input data
+    // const validatedData = DomainSchema.safeParse(data);
+    
+    // if (!validatedData.success) {
+    //   return { 
+    //     status: 400, 
+    //     message: "Invalid domain data" 
+    //   };
+    // }
+    
+    const { name, icon } = data;
+    
     // Find the user in our database (using their Clerk ID)
     const user = await prisma.user.findFirst({
       where: { clerkId: userId },
@@ -51,7 +50,7 @@ export const onIntegrateDomain = async (formData: string, icon: string) => {
     // Check if the domain already exists
     const existingDomain = await prisma.domain.findFirst({
       where: {
-        name,
+        name: data.name,
         userId: user.id,
       },
     });
@@ -75,8 +74,8 @@ export const onIntegrateDomain = async (formData: string, icon: string) => {
     // Create the domain
     const newDomain = await prisma.domain.create({
       data: {
-        name,
-        icon,
+        name: data.name,
+        icon: icon || "",
         userId: user.id,
       },
     });
@@ -97,37 +96,5 @@ export const onIntegrateDomain = async (formData: string, icon: string) => {
   } catch (error) {
     console.error("Error integrating domain:", error);
     return { status: 500, message: "Internal Server Error" };
-  }
-};
-
-// Get all domains for the current user
-export const getUserDomains = async () => {
-  try {
-    const { userId } = getAuth();
-    
-    if (!userId) {
-      return { status: 401, message: "Unauthorized", domains: [] };
-    }
-
-    const user = await prisma.user.findFirst({
-      where: { clerkId: userId },
-    });
-
-    if (!user) {
-      return { status: 404, message: "User not found", domains: [] };
-    }
-
-    const domains = await prisma.domain.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-    });
-
-    return { 
-      status: 200,
-      domains
-    };
-  } catch (error) {
-    console.error("Error fetching domains:", error);
-    return { status: 500, message: "Internal Server Error", domains: [] };
   }
 };

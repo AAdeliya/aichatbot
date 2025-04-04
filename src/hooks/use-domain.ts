@@ -1,8 +1,9 @@
+// src/hooks/use-domain.ts
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { FieldValues, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AddDomainSchema } from "@/schema/settings.schema";
+import { DomainSchema } from "@/schema/domains/domains.schema";
 import { UploadClient } from "@uploadcare/upload-client";
 import { onIntegrateDomain } from "@/actions/settings";
 import { toast } from "sonner";
@@ -17,8 +18,17 @@ export const useDomain = () => {
     handleSubmit, 
     formState: { errors }, 
     reset 
-  } = useForm<{ name: string; url: string }>({
-    resolver: zodResolver(AddDomainSchema),
+  } = useForm<{
+    name: string;
+    url: string;
+    icon: string;
+  }>({
+    resolver: zodResolver(DomainSchema.omit({ id: true, userId: true, createdAt: true, updatedAt: true, stripeId: true })),
+    defaultValues: {
+      name: "",
+      url: "",
+      icon: ""
+    }
   });
 
   const pathname = usePathname();
@@ -35,7 +45,7 @@ export const useDomain = () => {
     }
   }, [pathname]);
 
-  const onAddDomain = handleSubmit(async (values: FieldValues) => {
+  const onAddDomain = handleSubmit(async (values) => {
     setLoading(true);
 
     try {
@@ -56,12 +66,13 @@ export const useDomain = () => {
       }
 
       // Submit domain data to server action
-      const formData = JSON.stringify({
-        ...values,
-        icon: iconUrl,
-      });
+      const domainData = {
+        name: values.name,
+        url: values.url,
+        icon: iconUrl
+      };
 
-      const response = await onIntegrateDomain(formData, iconUrl);
+      const response = await onIntegrateDomain(domainData);
 
       if (response.status === 200) {
         toast.success(response.message);

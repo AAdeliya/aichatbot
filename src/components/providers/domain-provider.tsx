@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { getUserDomains } from "@/actions/settings";
+import { onIntegrateDomain } from "@/actions/settings";
 import { pusherClient } from "@/lib/utils";
 
 type Domain = {
@@ -83,3 +83,16 @@ export const useDomainContext = () => {
   }
   return context;
 };
+async function getUserDomains(): Promise<{
+  status: number;
+  domains: Domain[];
+}> {
+  // Replace this with your actual API call or logic to fetch domains
+  return {
+    status: 200,
+    domains: [
+      { id: "1", name: "Example Domain", icon: null },
+      { id: "2", name: "Another Domain", icon: "icon-url" },
+    ],
+  };
+}
