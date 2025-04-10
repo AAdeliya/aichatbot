@@ -21,6 +21,7 @@ export const onIntegrateDomain = async (data: any) => {
     if (!userId) {
       return { status: 401, message: "Unauthorized" };
     }
+    //
 
     // Validate the input data
     // const validatedData = DomainSchema.safeParse(data);
