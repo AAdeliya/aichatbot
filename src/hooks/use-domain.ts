@@ -23,12 +23,12 @@ export const useDomain = () => {
     url: string;
     icon: string;
   }>({
-    resolver: zodResolver(DomainSchema.omit({ id: true, userId: true, createdAt: true, updatedAt: true, stripeId: true })),
-    defaultValues: {
-      name: "",
-      url: "",
-      icon: ""
-    }
+    // resolver: zodResolver(DomainSchema.omit({ id: true, userId: true, createdAt: true, updatedAt: true, stripeId: true })),
+    // defaultValues: {
+    //   name: "",
+    //   url: "",
+    //   icon: ""
+    // }
   });
 
   const pathname = usePathname();

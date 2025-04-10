@@ -15,7 +15,7 @@ import {
   ChevronRight,
   Cable,
 } from "lucide-react";
-import { getUserDomains } from "@/actions/settings";
+import { getUserDomains } from "@/lib/getUserDomains";
 import DomainMenu from "../sidebar/domain-menu";
 
 type SidebarItem = {
@@ -68,21 +68,21 @@ export function Sidebar() {
   const [domains, setDomains] = useState<Domain[] | null>(null);
   const pathname = usePathname();
 
-  // Fetch domains on component mount
-  useEffect(() => {
-    const fetchDomains = async () => {
-      try {
-        const result = await getUserDomains();
-        if (result.status === 200) {
-          setDomains(result.domains);
-        }
-      } catch (error) {
-        console.error("Error fetching domains:", error);
-      }
-    };
+  // // Fetch domains on component mount
+  // useEffect(() => {
+  //   const fetchDomains = async () => {
+  //     try {
+  //       const result = await getUserDomains();
+  //       if (result.status === 200) {
+  //         setDomains(result.domains);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching domains:", error);
+  //     }
+  //   };
 
-    fetchDomains();
-  }, []);
+  //   fetchDomains();
+  // }, []);
 
   return (
     <div

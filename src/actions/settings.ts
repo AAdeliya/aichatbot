@@ -1,10 +1,10 @@
 // src/actions/settings.ts
 "use server";
 
-import { getAuth } from "@clerk/nextjs/server";
+import { auth} from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 import { Plans } from "@prisma/client";
-//import { DomainSchema } from "../schema/domains.schema";
+import { DomainSchema } from "../schema/domains/domains.schema";
 import { pusherServer } from "@/lib/utils";
 
 const MAX_DOMAINS = {
@@ -16,7 +16,7 @@ const MAX_DOMAINS = {
 export const onIntegrateDomain = async (data: any) => {
   try {
     // Get the authenticated user's ID
-    const { userId } = getAuth();
+    const { userId } = auth();
     
     if (!userId) {
       return { status: 401, message: "Unauthorized" };

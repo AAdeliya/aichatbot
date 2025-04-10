@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuth } from "@clerk/nextjs/server";
+import { useAuth } from "@clerk/nextjs";
 import { prisma } from "@/lib/db";
 import { Plans } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
   try {
     // Get the authenticated user
-    const { userId } = getAuth();
+    const { userId } = useAuth();
     
     if (!userId) {
       return NextResponse.json(

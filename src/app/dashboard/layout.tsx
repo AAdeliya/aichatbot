@@ -1,8 +1,15 @@
 // src/app/dashboard/layout.tsx
+import { Sidebar } from "@/components/sidebar";
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <main className="flex-1 p-6">{children}</main>;
+  return (
+    <div className="flex">
+      <Sidebar />
+      <main className="flex-1 p-4">{children}</main>
+    </div>
+  );
 }
